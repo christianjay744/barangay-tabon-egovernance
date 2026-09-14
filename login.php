@@ -376,7 +376,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <div class="auth-footer back-home">
 
-                <a href="index.php">
+                <a href="MyWebsite.php">
 
                     <i class="ri-arrow-left-line"></i>
 
