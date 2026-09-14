@@ -1,0 +1,6 @@
+config/db.php
+
+assets/uploads/activities/*
+!assets/uploads/activities/.gitkeep
+
+.env

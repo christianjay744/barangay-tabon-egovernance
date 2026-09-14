@@ -1,0 +1,7 @@
+{
+  "name":"barangay-tabon-blockchain",
+  "version":"1.0.0",
+  "scripts":{"node":"hardhat node","deploy":"hardhat run scripts/deploy.js --network localhost","api":"node api.js"},
+  "devDependencies":{"@nomicfoundation/hardhat-toolbox":"^5.0.0","hardhat":"^2.22.0"},
+  "dependencies":{"cors":"^2.8.5","express":"^4.19.2","ethers":"^6.13.0"}
+}
