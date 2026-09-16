@@ -29,50 +29,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'Barangay Clearance',
         'Certificate of Residency',
         'Certificate of Indigency',
-        'Certificate of Completion',
-        'Certificate of Good Moral',
-        'Other Certification'
+        'Certificate of Completion'
     ];
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | PUROK CLEARANCE UPLOAD + VALIDATION
-    |--------------------------------------------------------------------------
-    */
-
-    $purok_clearance = $_FILES['purok_clearance'] ?? null;
-    $max_upload_size = 5 * 1024 * 1024; // 5 MB
-    $allowed_mime_types = [
-        'image/jpeg' => 'jpg',
-        'image/png'  => 'png',
-        'image/webp' => 'webp'
-    ];
-
-    $upload_error = '';
-    $stored_relative_path = '';
-    $stored_absolute_path = '';
-
-    if (!$purok_clearance ||
-        !isset($purok_clearance['error']) ||
-        $purok_clearance['error'] === UPLOAD_ERR_NO_FILE
-    ) {
-        $upload_error = 'Purok Clearance picture is required before you can submit the request.';
-
-    } elseif ($purok_clearance['error'] !== UPLOAD_ERR_OK) {
-        $upload_error = 'Unable to upload the Purok Clearance picture. Please try again.';
-
-    } elseif (($purok_clearance['size'] ?? 0) <= 0 || $purok_clearance['size'] > $max_upload_size) {
-        $upload_error = 'Purok Clearance picture must be 5 MB or smaller.';
-
-    } else {
-        $finfo = new finfo(FILEINFO_MIME_TYPE);
-        $mime_type = $finfo->file($purok_clearance['tmp_name']);
-
-        if (!isset($allowed_mime_types[$mime_type])) {
-            $upload_error = 'Purok Clearance must be a JPG, PNG, or WEBP image.';
-        }
-    }
 
 
     /*
@@ -95,49 +53,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $message = 'Invalid document type selected.';
         $message_type = 'error';
 
-    } elseif ($upload_error !== '') {
-
-        $message = $upload_error;
-        $message_type = 'error';
-
     } else {
 
         try {
-
-            /*
-            |--------------------------------------------------------------------------
-            | SAVE PUROK CLEARANCE IMAGE
-            |--------------------------------------------------------------------------
-            */
-
-            $upload_dir = dirname(__DIR__) . '/uploads/purok_clearance';
-
-            if (!is_dir($upload_dir) && !mkdir($upload_dir, 0755, true)) {
-                throw new RuntimeException('Unable to create upload directory.');
-            }
-
-            if (!is_writable($upload_dir)) {
-                throw new RuntimeException('Upload directory is not writable.');
-            }
-
-            $extension = $allowed_mime_types[$mime_type];
-            $filename = 'purok_' .
-                (int) $_SESSION['user_id'] . '_' .
-                date('Ymd_His') . '_' .
-                bin2hex(random_bytes(8)) . '.' .
-                $extension;
-
-            $stored_absolute_path = $upload_dir . '/' . $filename;
-            $stored_relative_path = 'uploads/purok_clearance/' . $filename;
-
-            if (!is_uploaded_file($purok_clearance['tmp_name']) ||
-                !move_uploaded_file($purok_clearance['tmp_name'], $stored_absolute_path)
-            ) {
-                throw new RuntimeException('Unable to save uploaded Purok Clearance picture.');
-            }
-
-
-            $pdo->beginTransaction();
 
             $s = $pdo->prepare("
                 INSERT INTO document_requests
@@ -145,18 +63,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     user_id,
                     document_type,
                     purpose,
-                    requirements_text,
-                    purok_clearance_image
+                    requirements_text
                 )
-                VALUES (?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?)
             ");
 
             $s->execute([
                 $_SESSION['user_id'],
                 $document_type,
                 $purpose,
-                $requirements_text,
-                $stored_relative_path
+                $requirements_text
             ]);
 
 
@@ -222,8 +138,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $document_number
             );
 
-            $pdo->commit();
-
 
             $message =
                 'Document request submitted successfully. ' .
@@ -232,15 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $message_type = 'success';
 
-        } catch (Throwable $e) {
-
-            if ($pdo->inTransaction()) {
-                $pdo->rollBack();
-            }
-
-            if ($stored_absolute_path !== '' && is_file($stored_absolute_path)) {
-                @unlink($stored_absolute_path);
-            }
+        } catch (Exception $e) {
 
             $message =
                 'Unable to submit your request. Please try again.';
@@ -248,7 +154,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $message_type = 'error';
         }
     }
-}?>
+}
+?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -621,42 +528,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             min-height: 130px;
             resize: vertical;
             line-height: 1.5;
-        }
-
-
-        .file-upload-box {
-            border: 1px dashed #3a3a3a;
-            background: #0a0a0a;
-            border-radius: 12px;
-            padding: 18px;
-        }
-
-        .file-upload-box input[type="file"] {
-            width: 100%;
-            color: #bbb;
-            font-size: 12px;
-        }
-
-        .file-upload-box input[type="file"]::file-selector-button {
-            border: 0;
-            border-radius: 8px;
-            padding: 10px 14px;
-            margin-right: 12px;
-            background: linear-gradient(135deg, #ffd700, #ff9d00);
-            color: #000;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .purok-preview {
-            display: none;
-            width: 100%;
-            max-height: 320px;
-            object-fit: contain;
-            margin-top: 14px;
-            border-radius: 10px;
-            border: 1px solid #292929;
-            background: #050505;
         }
 
         .form-hint {
@@ -1110,7 +981,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <?php endif; ?>
 
 
-            <form method="POST" action="request.php" enctype="multipart/form-data">
+            <form method="POST" action="request.php">
 
 
                 <!-- DOCUMENT TYPE -->
@@ -1140,7 +1011,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 Certificate of Completion
                             </option>
 
-                            <option value="Barangay Clearance">
+                            <option value="Barangay Clearace">
                                 Barangay Clearance
                             </option>
 
@@ -1201,41 +1072,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
 
 
-                <!-- REQUIRED PUROK CLEARANCE -->
-
-                <div class="form-group">
-
-                    <label>
-                        Purok Clearance Picture
-                        <span class="required">*</span>
-                    </label>
-
-                    <div class="file-upload-box">
-                        <input
-                            type="file"
-                            name="purok_clearance"
-                            id="purok_clearance"
-                            accept="image/jpeg,image/png,image/webp"
-                            capture="environment"
-                            required
-                        >
-
-                        <img
-                            id="purok_preview"
-                            class="purok-preview"
-                            alt="Purok Clearance preview"
-                        >
-                    </div>
-
-                    <span class="form-hint">
-                        Required. Take or upload a clear picture of your Purok Clearance.
-                        JPG, PNG, or WEBP only, maximum 5 MB. You cannot submit without this image.
-                    </span>
-
-                </div>
-
-
-                <!-- REQUIREMENTS / NOTES -->
+                <!-- REQUIREMENTS -->
 
                 <div class="form-group">
 
@@ -1304,43 +1141,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 </main>
 
-
-<script>
-    const purokInput = document.getElementById('purok_clearance');
-    const purokPreview = document.getElementById('purok_preview');
-
-    purokInput.addEventListener('change', function () {
-        const file = this.files && this.files[0] ? this.files[0] : null;
-
-        if (!file) {
-            purokPreview.removeAttribute('src');
-            purokPreview.style.display = 'none';
-            return;
-        }
-
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-        const maxSize = 5 * 1024 * 1024;
-
-        if (!allowedTypes.includes(file.type)) {
-            alert('Please select a JPG, PNG, or WEBP image for the Purok Clearance.');
-            this.value = '';
-            purokPreview.removeAttribute('src');
-            purokPreview.style.display = 'none';
-            return;
-        }
-
-        if (file.size > maxSize) {
-            alert('Purok Clearance picture must be 5 MB or smaller.');
-            this.value = '';
-            purokPreview.removeAttribute('src');
-            purokPreview.style.display = 'none';
-            return;
-        }
-
-        purokPreview.src = URL.createObjectURL(file);
-        purokPreview.style.display = 'block';
-    });
-</script>
 
 </body>
 </html>

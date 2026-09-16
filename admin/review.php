@@ -259,6 +259,76 @@ $count_rejected = $pdo->query("
             max-width: 260px;
             line-height: 1.4;
         }
+
+        /* PUROK CLEARANCE */
+        .clearance-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #ffd700;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .clearance-link:hover {
+            text-decoration: underline;
+        }
+
+        .clearance-thumb {
+            width: 58px;
+            height: 58px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 215, 0, .25);
+            background: #0a0a0a;
+            display: block;
+        }
+
+        .modal-clearance {
+            margin-top: 20px;
+            padding: 18px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 215, 0, .16);
+            background: rgba(255, 215, 0, .035);
+        }
+
+        .modal-clearance-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            color: #ffd700;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: .5px;
+        }
+
+        .modal-clearance-image {
+            display: block;
+            width: 100%;
+            max-height: 420px;
+            object-fit: contain;
+            border-radius: 10px;
+            border: 1px solid #2b2b2b;
+            background: #050505;
+        }
+
+        .modal-clearance-open {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            margin-top: 12px;
+            color: #ffd700;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .clearance-missing {
+            color: #888;
+            font-size: 12px;
+        }
     </style>
 
 </head>
@@ -690,6 +760,10 @@ $count_rejected = $pdo->query("
                         </th>
 
                         <th>
+                            PUROK CLEARANCE
+                        </th>
+
+                        <th>
                             DATE
                         </th>
 
@@ -810,6 +884,44 @@ $count_rejected = $pdo->query("
                                     ) ?>
 
                                 </span>
+
+                            </td>
+
+
+                            <!-- PUROK CLEARANCE -->
+
+                            <td>
+
+                                <?php
+                                $clearance_path = trim(
+                                    (string)($request['purok_clearance_image'] ?? '')
+                                );
+                                ?>
+
+                                <?php if ($clearance_path !== ''): ?>
+
+                                    <a
+                                        href="../<?= htmlspecialchars($clearance_path, ENT_QUOTES, 'UTF-8') ?>"
+                                        target="_blank"
+                                        rel="noopener"
+                                        class="clearance-link"
+                                        title="Open Purok Clearance image"
+                                    >
+                                        <img
+                                            src="../<?= htmlspecialchars($clearance_path, ENT_QUOTES, 'UTF-8') ?>"
+                                            alt="Purok Clearance"
+                                            class="clearance-thumb"
+                                        >
+                                        <span>View</span>
+                                    </a>
+
+                                <?php else: ?>
+
+                                    <span class="clearance-missing">
+                                        No image
+                                    </span>
+
+                                <?php endif; ?>
 
                             </td>
 
@@ -1062,6 +1174,56 @@ $count_rejected = $pdo->query("
 
 
 
+                                <!-- PUROK CLEARANCE -->
+
+                                <div class="modal-clearance">
+
+                                    <div class="modal-clearance-title">
+                                        <i class="ri-image-line"></i>
+                                        PUROK CLEARANCE
+                                    </div>
+
+                                    <?php
+                                    $modal_clearance_path = trim(
+                                        (string)($request['purok_clearance_image'] ?? '')
+                                    );
+                                    ?>
+
+                                    <?php if ($modal_clearance_path !== ''): ?>
+
+                                        <a
+                                            href="../<?= htmlspecialchars($modal_clearance_path, ENT_QUOTES, 'UTF-8') ?>"
+                                            target="_blank"
+                                            rel="noopener"
+                                        >
+                                            <img
+                                                src="../<?= htmlspecialchars($modal_clearance_path, ENT_QUOTES, 'UTF-8') ?>"
+                                                alt="Purok Clearance uploaded by resident"
+                                                class="modal-clearance-image"
+                                            >
+                                        </a>
+
+                                        <a
+                                            href="../<?= htmlspecialchars($modal_clearance_path, ENT_QUOTES, 'UTF-8') ?>"
+                                            target="_blank"
+                                            rel="noopener"
+                                            class="modal-clearance-open"
+                                        >
+                                            <i class="ri-external-link-line"></i>
+                                            Open full image
+                                        </a>
+
+                                    <?php else: ?>
+
+                                        <div class="clearance-missing">
+                                            No Purok Clearance image was uploaded for this request.
+                                        </div>
+
+                                    <?php endif; ?>
+
+                                </div>
+
+
                                 <!-- HASH -->
 
                                 <div class="modal-hash">
@@ -1223,7 +1385,7 @@ $count_rejected = $pdo->query("
                     <tr>
 
                         <td
-                            colspan="7"
+                            colspan="8"
                             class="empty-state"
                         >
 
