@@ -2365,8 +2365,7 @@ try {
                 </h3>
 
                 <p>
-                    Enter the official Barangay Tabon
-                    address here.
+                    Purok 4-a Tabon,Bislig City Surigao del sur, 8311
                 </p>
 
             </div>
